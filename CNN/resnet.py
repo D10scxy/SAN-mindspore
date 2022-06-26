@@ -261,8 +261,7 @@ class MakeLayer3(nn.Cell):
         x = self.c(x)
 
         return x
-
-
+    
 class ResNet(nn.Cell):
     """ResNet"""
 
@@ -302,6 +301,42 @@ class ResNet(nn.Cell):
         x = self.pool(x, (2, 3))
         x = self.squeeze(x)
         x = self.fc(x)
+        return x
+    
+class ImtNet(nn.Cell):
+
+    def __init__(self, block, num_classes=100, batch_size=32):
+        """init"""
+        super(ImtNet, self).__init__()
+        self.batch_size = batch_size
+        self.num_classes = num_classes
+
+        self.conv1 = conv7x7(3, 64, stride=2, padding=0)
+
+        self.bn1 = bn_with_initialize(64)
+        self.relu = ops.ReLU()
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, pad_mode="same")
+
+        self.layer1 = MakeLayer0(block, in_channels=64, out_channels=256, stride=1)
+        self.layer2 = MakeLayer1(block, in_channels=256, out_channels=512, stride=2)
+        self.layer3 = MakeLayer2(block, in_channels=512, out_channels=1024, stride=2)
+        self.layer4 = MakeLayer3(block, in_channels=1024, out_channels=2048, stride=2)
+
+        self.pool = ops.ReduceMean(keep_dims=True)
+
+    def construct(self, x):
+        """construct"""
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        x = self.pool(x, (2, 3))
         return x
 
 
