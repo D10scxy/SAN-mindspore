@@ -336,7 +336,6 @@ class ImtNet(nn.Cell):
         x = self.layer3(x)
         x = self.layer4(x)
 
-        x = self.pool(x, (2, 3))
         return x
 
 
